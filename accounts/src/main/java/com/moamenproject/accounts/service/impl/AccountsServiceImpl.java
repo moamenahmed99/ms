@@ -1,5 +1,7 @@
 package com.moamenproject.accounts.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Random;
 
 import org.springframework.stereotype.Service;
@@ -8,6 +10,8 @@ import com.moamenproject.accounts.constants.AccountsConstants;
 import com.moamenproject.accounts.dto.CustomerDto;
 import com.moamenproject.accounts.entity.Accounts;
 import com.moamenproject.accounts.entity.Customer;
+import com.moamenproject.accounts.exception.CustomerAlreadyExistsException;
+import com.moamenproject.accounts.exception.ResourceNotFoundException;
 import com.moamenproject.accounts.mapper.CustomerMapper;
 import com.moamenproject.accounts.repository.AccountsRepository;
 import com.moamenproject.accounts.repository.CustomerRepository;
@@ -25,6 +29,12 @@ public class AccountsServiceImpl implements IAccountsService{
     @Override
     public void createAccount(CustomerDto customerDto) {
         Customer customer = CustomerMapper.mapToCustomer(customerDto, new Customer());
+        Optional<Customer> optionalCustomer = customerRepository.findByMobileNumber(customerDto.getMobileNumber());
+        if(optionalCustomer.isPresent()){
+            throw new CustomerAlreadyExistsException("Customer already registered with given mobileNumber" + customerDto.getMobileNumber());
+        }
+        customer.setCreatedAt(LocalDateTime.now());
+        customer.setCreatedBy("Anonymous");
         Customer savedCustomer = customerRepository.save(customer);
         accountsRepository.save(createNewAccount(savedCustomer));
     }
@@ -36,8 +46,20 @@ public class AccountsServiceImpl implements IAccountsService{
         newAccount.setAccountNumber(randomAccNumber);
         newAccount.setAccountType(AccountsConstants.SAVINGS);
         newAccount.setBranchAddress(AccountsConstants.ADDRESS);
+        newAccount.setCreatedAt(LocalDateTime.now());
+        newAccount.setCreatedBy("Anonymous");
     
         return newAccount;
+    }
+
+    @Override
+    public CustomerDto fetchAccount(String mobileNumber) {
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+            ()-> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
+        );
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerID()).orElseThrow(
+            ()-> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString);
+        );
     }
 
 }
