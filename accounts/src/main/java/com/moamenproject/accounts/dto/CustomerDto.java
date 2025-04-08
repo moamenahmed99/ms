@@ -9,4 +9,6 @@ public class CustomerDto {
     private String Email;
     
     private String mobileNumber;
+    
+    private AccountsDto accountsDto;
 }

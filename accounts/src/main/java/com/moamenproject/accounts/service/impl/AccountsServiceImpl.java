@@ -7,11 +7,13 @@ import java.util.Random;
 import org.springframework.stereotype.Service;
 
 import com.moamenproject.accounts.constants.AccountsConstants;
+import com.moamenproject.accounts.dto.AccountsDto;
 import com.moamenproject.accounts.dto.CustomerDto;
 import com.moamenproject.accounts.entity.Accounts;
 import com.moamenproject.accounts.entity.Customer;
 import com.moamenproject.accounts.exception.CustomerAlreadyExistsException;
 import com.moamenproject.accounts.exception.ResourceNotFoundException;
+import com.moamenproject.accounts.mapper.AccountsMapper;
 import com.moamenproject.accounts.mapper.CustomerMapper;
 import com.moamenproject.accounts.repository.AccountsRepository;
 import com.moamenproject.accounts.repository.CustomerRepository;
@@ -57,9 +59,53 @@ public class AccountsServiceImpl implements IAccountsService{
         Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
             ()-> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber)
         );
-        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerID()).orElseThrow(
-            ()-> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString);
+        Accounts accounts = accountsRepository.findByCustomerId(customer.getCustomerId()).orElseThrow(
+            ()-> new ResourceNotFoundException("Account", "customerId", customer.getCustomerId().toString())
         );
+        CustomerDto customerDto = CustomerMapper.mapToCustomerDto(customer, new CustomerDto());
+        customerDto.setAccountsDto(AccountsMapper.mapToAccountsDto(accounts, new AccountsDto()));
+
+        return customerDto;
+    }
+
+    @Override
+    public boolean updateAccount(CustomerDto customerDto) {
+        
+        boolean isUpdated = false;
+        AccountsDto accountsDto = customerDto.getAccountsDto();
+
+        if(accountsDto != null){
+            Accounts accounts = accountsRepository.findById(accountsDto.getAccountNumber()).orElseThrow(
+                ()-> new ResourceNotFoundException("Account", "AccountNumber", accountsDto.getAccountNumber().toString())
+            );
+            AccountsMapper.mapToAccounts(accountsDto, accounts);
+            accounts = accountsRepository.save(accounts);
+
+            Long customerID = accounts.getCustomerId();
+            Customer customer = customerRepository.findById(customerID).orElseThrow(
+                ()-> new ResourceNotFoundException("Customer", "CustomerID", customerID.toString())
+            );
+            CustomerMapper.mapToCustomer(customerDto, customer);
+            customerRepository.save(customer);
+            isUpdated = true;
+        }
+        
+
+        return isUpdated;
+
+    }
+
+    @Override
+    public void deleteAccount(String mobileNumber) {
+        
+        Customer customer = customerRepository.findByMobileNumber(mobileNumber).orElseThrow(
+            ()-> new ResourceNotFoundException("Customer", "mobileNumber", mobileNumber.toString())
+        );
+        Long customerID = customer.getCustomerId();
+        accountsRepository.deleteByCustomerId(customerID);
+        customerRepository.deleteById(customerID);
+
+        
     }
 
 }
