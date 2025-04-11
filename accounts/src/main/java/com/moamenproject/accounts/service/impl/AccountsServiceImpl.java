@@ -1,6 +1,5 @@
 package com.moamenproject.accounts.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
 
@@ -104,7 +103,7 @@ public class AccountsServiceImpl implements IAccountsService{
         Long customerID = customer.getCustomerId();
         accountsRepository.deleteByCustomerId(customerID);
         customerRepository.deleteById(customerID);
-
+        // return true;
         
     }
 
