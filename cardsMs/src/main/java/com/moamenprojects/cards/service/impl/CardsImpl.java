@@ -5,7 +5,10 @@ import java.util.Random;
 import org.springframework.stereotype.Service;
 
 import com.moamenprojects.cards.constants.CardsConstants;
+import com.moamenprojects.cards.dto.CardsDto;
 import com.moamenprojects.cards.entity.Cards;
+import com.moamenprojects.cards.exception.ResourceNotFoundException;
+import com.moamenprojects.cards.mapper.CardsMapper;
 import com.moamenprojects.cards.repository.CardsRepository;
 import com.moamenprojects.cards.service.ICardsService;
 
@@ -35,11 +38,31 @@ public class CardsImpl implements ICardsService{
     }
 
     @Override
-    public Cards fetchCards(String mobileNumber) {
-        // cardsRepository.findByMobileNumber(mobileNumber).orElseThrow(
-            // () ->
-        // )
-        throw new UnsupportedOperationException("Unimplemented method 'fetchCards'");
+    public CardsDto fetchCards(String mobileNumber) {
+        Cards cards =  cardsRepository.findByMobileNumber(mobileNumber).orElseThrow(
+            () -> new ResourceNotFoundException("Card", "mobileNumber", mobileNumber)
+        );
+        return CardsMapper.maptoCardsDto(cards, new CardsDto());
     }
+
+    @Override
+    public void updateCard(CardsDto cardsDto) {
+        String cardNumber = cardsDto.getCardNumber();
+        Cards card = cardsRepository.findByCardNumber(cardNumber).orElseThrow(
+            ()-> new ResourceNotFoundException("Card", "CardNumber", cardNumber)
+        );
+        CardsMapper.maptoCards(card, cardsDto);
+        cardsRepository.save(card);
+    }
+
+    @Override
+    public void deleteCard(String mobileNumber) {
+        
+        Cards card = cardsRepository.findByMobileNumber(mobileNumber).orElseThrow(
+            ()-> new ResourceNotFoundException("Card", "mobileNumber", mobileNumber)
+        );
+        cardsRepository.deleteById(card.getCardId());
+    }
+
 
 }
