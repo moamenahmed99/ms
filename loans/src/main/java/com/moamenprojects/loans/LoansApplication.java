@@ -20,8 +20,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 				description = "EazyBank Loans microservice REST API Documentation",
 				version = "v1",
 				contact = @Contact(
-						name = "Madan Reddy",
-						email = "tutor@moamenprojects.com",
+						name = "Moamen Ahmed",
+						email = "mo@moamenprojects.com",
 						url = "https://www.moamenprojects.com"
 				),
 				license = @License(
